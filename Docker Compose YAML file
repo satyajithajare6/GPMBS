@@ -1,0 +1,18 @@
+version: '3'
+services:
+  spark-job:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    command: spark-submit --master ${SPARK_MASTER} --class CSVToDeltaJob /app/csv_to_delta_job.py /app/data/input.csv true /app/data/delta-table
+  spark-history-server:
+    image: gcr.io/spark-operator/spark:v2.4.0
+    command: ["/sbin/tini", "-s", "--", "/opt/spark/bin/spark-class", "-Dspark.history.fs.logDirectory=/path/to/log/dir/", "org.apache.spark.deploy.history.HistoryServer"]
+    ports:
+      - 18080:18080
+    volumes:
+      - /path/to/log/dir/:/path/to/log/dir/
